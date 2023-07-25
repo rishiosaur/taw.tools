@@ -26,20 +26,21 @@ export default function Home() {
         <p>Tools for Accelerated Whimsy</p>
       </div>
 
-      <div className="row">
-        <input
-          placeholder="Start a question"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-        />
-        <button
-          onClick={() => {
-            submitQuestion();
-          }}
-        >
-          Go
-        </button>
-      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submitQuestion();
+        }}
+      >
+        <div className="row">
+          <input
+            placeholder="Start a question"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+          />
+          <button type="submit">Go</button>
+        </div>
+      </form>
     </div>
   );
 }

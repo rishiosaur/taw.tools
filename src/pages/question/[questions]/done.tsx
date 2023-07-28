@@ -55,10 +55,16 @@ function Card({
             <>
               <p>
                 <em>
-                  {(q?.answerTime - pq?.answerTime) / 1000 / 60 > 1
-                    ? Math.round((q?.answerTime - pq?.answerTime) / 1000 / 60)
-                    : Math.round((q?.answerTime - pq?.answerTime) / 1000)}
-                  {(q?.answerTime - pq?.answerTime) / 1000 / 60 > 1 ? "m" : "s"}{" "}
+                  {(q?.answerTime - (pq?.answerTime as number)) / 1000 / 60 > 1
+                    ? Math.round(
+                        q?.answerTime - (pq?.answerTime as number) / 1000 / 60
+                      )
+                    : Math.round(
+                        q?.answerTime - (pq?.answerTime as number) / 1000
+                      )}
+                  {(q?.answerTime - (pq?.answerTime as number)) / 1000 / 60 > 1
+                    ? "m"
+                    : "s"}{" "}
                   later,{" "}
                 </em>
                 <b>{pq?.name}</b> {sampleArray(["asks", "inquires"])}:
@@ -95,7 +101,7 @@ const QuestionPage = ({
     // remove the last question if its unanswered
     let qs = [
       ...questions.slice(0, -1),
-      questions[questions.length - 1].answer
+      (questions[questions.length - 1] as Question).answer
         ? questions[questions.length - 1]
         : null,
     ].filter(Boolean) as AnsweredQuestions;
@@ -125,7 +131,7 @@ const QuestionPage = ({
         <h1>"{title}"</h1>
         <p>
           A whimsical thread on{" "}
-          {new Date(questions[0].answerTime).toLocaleDateString()}
+          {new Date((questions[0] as Question).answerTime).toLocaleDateString()}
         </p>
         <small>
           Permalink: <a href={`/${id}`}>taw.tools/{id}</a>
@@ -153,6 +159,7 @@ const QuestionPage = ({
             .filter((_, i) => i % 2 === 1)
             .map((q, i, arr) => (
               <Card
+                first={i === 0}
                 q={q}
                 pq={
                   filteredQuestions.filter((_, i) => i % 2 === 0)[

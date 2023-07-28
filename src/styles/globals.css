@@ -41,6 +41,23 @@ p {
   margin: 0;
 }
 
+small {
+  font-size: 90%;
+}
+
+a {
+  color: var(--main-color);
+  text-decoration: 1px wavy underline var(--accent-color);
+}
+
+a:hover {
+  text-decoration: 1px solid underline var(--accent-color);
+}
+
+a:active a:focus {
+  color: var(--accent-color);
+}
+
 * {
   font-family: "iA Writer Quattro S", Courier, monospace;
 }

@@ -1,18 +1,26 @@
 import { useCallback, useState } from "react";
 import { NextApiRequest } from "next";
+import { nanoid } from "nanoid";
 import { useRouter } from "next/router";
 import {
   Question,
   Questions,
   AnsweredQuestions,
+  QuestionState,
 } from "../../../types/Question";
 import { decode, encode } from "js-base64";
+import { decodeState } from "@/util/encode";
+import { sampleArray } from "@/util/sample";
 
-function ProfilePicture({}) {
-  return <div className="profile-picture"></div>;
-}
-
-function Card({ q, pq }: { q: Question; pq?: Question }) {
+function Card({
+  q,
+  pq,
+  first = false,
+}: {
+  q: Question;
+  first: boolean;
+  pq?: Question;
+}) {
   return (
     <div
       style={{
@@ -24,10 +32,40 @@ function Card({ q, pq }: { q: Question; pq?: Question }) {
       <div className="card" key={q.question}>
         <p className="annotation">Q</p>
         <div className="group">
-          <p>
-            <b>{pq?.name}</b> asks,
-          </p>
-          <h2>"{q.question}"</h2>
+          {first ? (
+            <>
+              <p>
+                At{" "}
+                <em>
+                  {new Date(q.answerTime).getHours()}:
+                  {new Date(q.answerTime).getMinutes()}
+                </em>
+                , <b>a question</b>{" "}
+                {sampleArray([
+                  "drops from the sky",
+                  "comes into existence",
+                  "is asked",
+                  "manifests",
+                ])}
+                :
+              </p>
+              <h2>"{q.question}"</h2>
+            </>
+          ) : (
+            <>
+              <p>
+                <em>
+                  {(q?.answerTime - pq?.answerTime) / 1000 / 60 > 1
+                    ? Math.round((q?.answerTime - pq?.answerTime) / 1000 / 60)
+                    : Math.round((q?.answerTime - pq?.answerTime) / 1000)}
+                  {(q?.answerTime - pq?.answerTime) / 1000 / 60 > 1 ? "m" : "s"}{" "}
+                  later,{" "}
+                </em>
+                <b>{pq?.name}</b> {sampleArray(["asks", "inquires"])}:
+              </p>
+              <h2>"{q.question}"</h2>
+            </>
+          )}
         </div>
       </div>
       <div
@@ -48,7 +86,11 @@ function Card({ q, pq }: { q: Question; pq?: Question }) {
   );
 }
 
-const QuestionPage = ({ questions }: { questions: AnsweredQuestions }) => {
+const QuestionPage = ({
+  state: { questions, title, id },
+}: {
+  state: QuestionState;
+}) => {
   const filteredQuestions = (() => {
     // remove the last question if its unanswered
     let qs = [
@@ -62,8 +104,6 @@ const QuestionPage = ({ questions }: { questions: AnsweredQuestions }) => {
     return qs;
   })();
 
-  const [title, setTitle] = useState("");
-
   return (
     <>
       {/* <div
@@ -73,12 +113,31 @@ const QuestionPage = ({ questions }: { questions: AnsweredQuestions }) => {
       >
         <input value={title} onChange={(e) => setTitle(e.target.value)} />
       </div> */}
+      <div
+        className="card"
+        style={{
+          textAlign: "center",
+          marginLeft: "35vw",
+          width: "30vw",
+          marginTop: "4vh",
+        }}
+      >
+        <h1>"{title}"</h1>
+        <p>
+          A whimsical thread on{" "}
+          {new Date(questions[0].answerTime).toLocaleDateString()}
+        </p>
+        <small>
+          Permalink: <a href={`/${id}`}>taw.tools/{id}</a>
+        </small>
+      </div>
       <div style={{ display: "flex" }}>
         <div className="card-column">
           {filteredQuestions
             .filter((_, i) => i % 2 === 0)
             .map((q, i, arr) => (
               <Card
+                first={i === 0}
                 q={q}
                 pq={filteredQuestions[Math.max(0, i * 2 - 1)]}
                 key={q.question}
@@ -111,14 +170,32 @@ const QuestionPage = ({ questions }: { questions: AnsweredQuestions }) => {
 
 export default QuestionPage;
 
-export const getServerSideProps = (req: NextApiRequest) => {
+export const getServerSideProps = async (req: NextApiRequest) => {
   const questions: string = req.query.questions as string;
 
-  const parsedQuestions = JSON.parse(decode(questions));
+  const parsedQuestions = decodeState(questions);
+  console.log("hi", parsedQuestions);
+
+  if (!parsedQuestions.id) {
+    const f = await fetch("https://tawtools-2695.restdb.io/rest/threads", {
+      method: "POST",
+      body: JSON.stringify({
+        // _id: id,
+        data: questions,
+      }),
+      headers: {
+        "cache-control": "no-cache",
+        "x-apikey": process.env.key as string,
+        "content-type": "application/json",
+      },
+    }).then((z) => z.json());
+
+    parsedQuestions.id = f._id;
+  }
 
   return {
     props: {
-      questions: parsedQuestions,
+      state: parsedQuestions,
     },
   };
 };

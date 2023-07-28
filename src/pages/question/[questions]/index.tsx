@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { NextApiRequest } from "next";
 import { useRouter } from "next/router";
-import { Question, Questions } from "../../../types/Question";
+import { Question, QuestionState, Questions } from "../../../types/Question";
 import { decode, encode } from "js-base64";
+import { decodeState, encodeState } from "@/util/encode";
 
-const QuestionPage = ({ questions }: { questions: Questions }) => {
+const QuestionPage = ({
+  state: { questions, title, id },
+}: {
+  state: QuestionState;
+}) => {
   console.log(questions);
   const router = useRouter();
   const [answer, setAnswer] = useState("");
@@ -12,31 +17,36 @@ const QuestionPage = ({ questions }: { questions: Questions }) => {
   const [question, setQuestion] = useState("");
 
   const answerQuestion = useCallback(() => {
-    const encoded = encode(
-      JSON.stringify([
-        ...questions.slice(0, -1),
-        {
-          question: questions[questions.length - 1].question,
-          answer,
-          answerTime: Date.now(),
-          name,
-        },
-        {
-          question,
-        },
-      ]),
-      true
-    );
-    console.log(encoded);
-    router.push(`/question/${encoded}`);
-    setName("");
-    setAnswer("");
-    setQuestion("");
-  }, [router, questions, answer, name, question]);
+    if (![name, answer, question].includes("")) {
+      const encoded = encodeState({
+        questions: [
+          ...questions.slice(0, -1),
+          {
+            ...questions[questions.length - 1],
+            question: questions[questions.length - 1].question,
+            answer,
+            answerTime: Date.now(),
+            name,
+          },
+          {
+            question,
+            askTime: Date.now(),
+          },
+        ],
+        title,
+        id,
+      });
+      console.log(encoded);
+      router.push(`/question/${encoded}`);
+      setName("");
+      setAnswer("");
+      setQuestion("");
+    }
+  }, [questions, answer, name, question, title, id, router]);
 
   const done = useCallback(() => {
-    const encoded = encode(
-      JSON.stringify([
+    const encoded = encodeState({
+      questions: [
         ...questions.slice(0, -1),
         {
           question: questions[questions.length - 1].question,
@@ -44,14 +54,17 @@ const QuestionPage = ({ questions }: { questions: Questions }) => {
           name,
           answerTime: Date.now(),
         },
-      ]),
-      true
-    );
+      ],
+      title,
+      id,
+    });
+    console.log(title, id);
     router.push(`/question/${encoded}/done`);
-  }, [questions, answer, name, router]);
+  }, [questions, answer, name, title, id, router]);
 
   return (
     <div className="box">
+      {/* {JSON.stringify(questions)} */}
       <h1>
         Question {questions.length}: {questions.slice(-1)[0].question}
       </h1>
@@ -92,10 +105,11 @@ export default QuestionPage;
 
 export const getServerSideProps = (req: NextApiRequest) => {
   const questions: string = req.query.questions as string;
+  console.log("mo", decodeState(questions));
 
   return {
     props: {
-      questions: JSON.parse(decode(questions)),
+      state: decodeState(questions),
     },
   };
 };

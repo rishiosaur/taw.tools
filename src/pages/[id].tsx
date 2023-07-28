@@ -7,7 +7,7 @@ import {
   Questions,
   AnsweredQuestions,
   QuestionState,
-} from "../../../types/Question";
+} from "../types/Question";
 import { decode, encode } from "js-base64";
 import { decodeState } from "@/util/encode";
 import { sampleArray } from "@/util/sample";

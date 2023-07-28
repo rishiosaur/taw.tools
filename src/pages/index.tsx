@@ -34,36 +34,42 @@ export default function Home() {
           loaded from here—and strike up a conversation!
         </p>
       </div>
-
-      <div className="row">
-        <input
-          placeholder="Chain Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          style={{
-            flex: 1,
-          }}
-        />
-        <input
-          placeholder="Initial question"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          style={{
-            flex: 5,
-          }}
-        />
-        <button
-          onClick={() => {
-            submitQuestion();
-          }}
-          className="action"
-          style={{
-            flex: 1,
-          }}
-        >
-          Go!
-        </button>
-      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submitQuestion();
+        }}
+      >
+        <div className="row">
+          <input
+            placeholder="Chain Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            style={{
+              flex: 1,
+            }}
+          />
+          <input
+            placeholder="Initial question"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            style={{
+              flex: 5,
+            }}
+          />
+          <button
+            onClick={() => {
+              submitQuestion();
+            }}
+            className="action"
+            style={{
+              flex: 1,
+            }}
+          >
+            Go!
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

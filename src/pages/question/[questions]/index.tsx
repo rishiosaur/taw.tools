@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { NextApiRequest } from "next";
 import { useRouter } from "next/router";
 import { Question, QuestionState, Questions } from "../../../types/Question";
@@ -15,6 +15,7 @@ const QuestionPage = ({
   const [answer, setAnswer] = useState("");
   const [name, setName] = useState("");
   const [question, setQuestion] = useState("");
+  const answerRef = useRef<HTMLTextAreaElement | null>(null);
 
   const answerQuestion = useCallback(() => {
     if (![name, answer, question].includes("")) {
@@ -41,6 +42,7 @@ const QuestionPage = ({
       setName("");
       setAnswer("");
       setQuestion("");
+      answerRef.current?.focus();
     }
   }, [questions, answer, name, question, title, id, router]);
 
@@ -68,35 +70,51 @@ const QuestionPage = ({
       <h1>
         Question {questions.length}: {questions.slice(-1)[0].question}
       </h1>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "2rem",
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (answer && name && question) {
+            answerQuestion();
+            return;
+          }
         }}
       >
-        <textarea
-          value={answer}
-          placeholder="Answer"
-          onChange={(e) => setAnswer(e.target.value)}
-        />
-        <input
-          value={name}
-          placeholder="Your Name"
-          onChange={(e) => setName(e.target.value)}
-        />
-        <input
-          value={question}
-          placeholder="Next Question"
-          onChange={(e) => setQuestion(e.target.value)}
-        />
-        <div className="row submit-row">
-          <button onClick={() => done()}>Done</button>
-          <button className="action" onClick={() => answerQuestion()}>
-            Next
-          </button>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "2rem",
+          }}
+        >
+          <textarea
+            value={answer}
+            placeholder="Answer"
+            onChange={(e) => setAnswer(e.target.value)}
+            ref={answerRef}
+          />
+          <input
+            value={name}
+            placeholder="Your Name"
+            onChange={(e) => setName(e.target.value)}
+          />
+          <input
+            value={question}
+            placeholder="Next Question"
+            onChange={(e) => setQuestion(e.target.value)}
+          />
+          <div className="row submit-row">
+            <button onClick={() => done()} type="button">
+              Done
+            </button>
+            <button
+              className={answer && name && question ? "action" : ""}
+              type="submit"
+            >
+              Next
+            </button>
+          </div>
         </div>
-      </div>
+      </form>
     </div>
   );
 };
